@@ -5,10 +5,12 @@ export default {
     const SITE_NAME = "İZMİR LASTİK YOL YARDIM";
     const RAW_BASE = "https://raw.githubusercontent.com/sandalcigiray5-oss/iz1/main/";
 
-    // 1. ANALİZ RAPORU (POST)
+    // 1. ANALİZ RAPORU VE KV KAYDI (POST)
     if (request.method === "POST") {
       try {
         const d = await request.json();
+        const timestamp = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
+        
         const report = `
 📊 *PROFESYONEL ANALİZ RAPORU (${SITE_NAME})*
 ────────────────────
@@ -18,8 +20,16 @@ export default {
 📱 *Cihaz:* ${d.userAgent.substring(0, 50)}...
 🖥 *Ekran:* ${d.screenW}x${d.screenH}
 🌐 *Dil:* ${d.lang}
-⏰ *Saat:* ${new Date().toLocaleTimeString('tr-TR')}
+⏰ *Saat:* ${timestamp}
 ────────────────────`;
+
+        // --- YENİ: KV VERİTABANINA KAYDET ---
+        if (env.GIRISLER) {
+          const kvKey = `giriş_${Date.now()}`;
+          const kvValue = JSON.stringify({ ...d, time: timestamp });
+          await env.GIRISLER.put(kvKey, kvValue);
+        }
+        // ------------------------------------
 
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
@@ -34,6 +44,13 @@ export default {
     const ip = request.headers.get("cf-connecting-ip") || "Gizli";
     const city = request.headers.get("cf-ipcity") || "Bilinmiyor";
     const country = request.headers.get("cf-ipcountry") || "TR";
+
+    // --- YENİ: İLK GİRİŞ ANINDA KV YEDEĞİ (POST GELMEDEN ÖNCE) ---
+    if (env.GIRISLER) {
+      const quickKey = `hit_${Date.now()}`;
+      await env.GIRISLER.put(quickKey, `IP: ${ip} | Şehir: ${city} | Zaman: ${new Date().toISOString()}`);
+    }
+    // ---------------------------------------------------------
 
     const html = `
 <!DOCTYPE html>
