@@ -23,13 +23,11 @@ export default {
 ⏰ *Saat:* ${timestamp}
 ────────────────────`;
 
-        // --- YENİ: KV VERİTABANINA KAYDET ---
         if (env.GIRISLER) {
           const kvKey = `giriş_${Date.now()}`;
           const kvValue = JSON.stringify({ ...d, time: timestamp });
           await env.GIRISLER.put(kvKey, kvValue);
         }
-        // ------------------------------------
 
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
@@ -45,12 +43,10 @@ export default {
     const city = request.headers.get("cf-ipcity") || "Bilinmiyor";
     const country = request.headers.get("cf-ipcountry") || "TR";
 
-    // --- YENİ: İLK GİRİŞ ANINDA KV YEDEĞİ (POST GELMEDEN ÖNCE) ---
     if (env.GIRISLER) {
       const quickKey = `hit_${Date.now()}`;
       await env.GIRISLER.put(quickKey, `IP: ${ip} | Şehir: ${city} | Zaman: ${new Date().toISOString()}`);
     }
-    // ---------------------------------------------------------
 
     const html = `
 <!DOCTYPE html>
@@ -59,6 +55,31 @@ export default {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>İzmir Lastik Yol Yardım | 0544 391 12 44</title>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18001084840"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18001084840');
+</script>
+
+<script>
+function gtag_report_conversion(url) {
+  var callback = function () {
+    if (typeof(url) != 'undefined') {
+      window.location = url;
+    }
+  };
+  gtag('event', 'conversion', {
+      'send_to': 'AW-18001084840/Rws6CPjcgoUcEKiDy4dD',
+      'value': 1.0,
+      'currency': 'TRY',
+      'event_callback': callback
+  });
+  return false;
+}
+</script>
 
 <style>
 :root { --ana-sari: #ffcc00; --koyu-bg: #0d0d0d; --kart-bg: #1a1a1a; --ara: #e31e24; --wp: #25d366; }
@@ -90,7 +111,7 @@ body, html { margin:0; padding:0; background-color:var(--koyu-bg); color:#fff; f
         <h1>İZMİR LASTİK<br>YOL YARDIM</h1>
         <p>7/24 MOBİL SERVİS</p>
     </div>
-    <a href="tel:05443911244" class="phone-top">0544 391 12 44<span>Tıkla Hemen Ara</span></a>
+    <a href="tel:05443911244" onclick="return gtag_report_conversion('tel:05443911244');" class="phone-top">0544 391 12 44<span>Tıkla Hemen Ara</span></a>
 </div>
 
 <div class="info-bar">
@@ -112,7 +133,7 @@ body, html { margin:0; padding:0; background-color:var(--koyu-bg); color:#fff; f
 </div>
 
 <div class="footer-nav">
-    <a href="tel:05443911244" class="btn btn-ara">📞 ARA<span>0544 391 12 44</span></a>
+    <a href="tel:05443911244" onclick="return gtag_report_conversion('tel:05443911244');" class="btn btn-ara">📞 ARA<span>0544 391 12 44</span></a>
     <a href="https://wa.me/905443911244?text=Merhaba, İzmir acil lastik yardımı lazım." class="btn btn-wp">💬 WHATSAPP<span>Konum Gönder</span></a>
 </div>
 
@@ -135,5 +156,3 @@ window.addEventListener('pagehide', function() {
 </html>`;
 
     return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
-  }
-};
